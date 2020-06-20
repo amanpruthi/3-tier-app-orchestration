@@ -192,20 +192,10 @@
           {
             "Key": "Name",
             "Value": "iamdevops-BE"
-          }
-        ],
-        "Volumes": [
-          {
-            "Device": "/dev/sdb",
-            "VolumeId": {
-              "Ref": "volumevol0e30d132dd80f0eec"
-            }
           },
           {
-            "Device": "/dev/sda1",
-            "VolumeId": {
-              "Ref": "iamdevopsBeRootVol"
-            }
+            "Key": "App",
+            "Value": "BE"
           }
         ],
         "NetworkInterfaces": [
@@ -245,20 +235,10 @@
           {
             "Key": "Name",
             "Value": "iamdevops-DB"
-          }
-        ],
-        "Volumes": [
-          {
-            "Device": "/dev/sdb",
-            "VolumeId": {
-              "Ref": "volumevol0b8ed9a3f0ec2e81a"
-            }
           },
           {
-            "Device": "/dev/sda1",
-            "VolumeId": {
-              "Ref": "iamdevopsDbRootVol"
-            }
+            "Key": "App",
+            "Value": "DB"
           }
         ],
         "NetworkInterfaces": [
@@ -277,7 +257,7 @@
             ],
             "GroupSet": [
               {
-                "Ref": "sgiamdevopsBE"
+                "Ref": "sgiamdevopsDB"
               }
             ]
           }
@@ -298,20 +278,10 @@
           {
             "Key": "Name",
             "Value": "iamdevops-FE"
-          }
-        ],
-        "Volumes": [
-          {
-            "Device": "/dev/sdb",
-            "VolumeId": {
-              "Ref": "volumevol070db16fe9310d76a"
-            }
           },
           {
-            "Device": "/dev/sda1",
-            "VolumeId": {
-              "Ref": "iamdevopsFeRootVol"
-            }
+            "Key": "App",
+            "Value": "FE"
           }
         ],
         "NetworkInterfaces": [
@@ -334,96 +304,6 @@
               }
             ],
             "AssociatePublicIpAddress": "true"
-          }
-        ]
-      }
-    },
-    "volumevol0e30d132dd80f0eec": {
-      "Type": "AWS::EC2::Volume",
-      "Properties": {
-        "AvailabilityZone": "us-east-1a",
-        "Size": "15",
-        "SnapshotId": "snap-062110368015965de",
-        "VolumeType": "gp2",
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "iamdevops-BE-/mnt"
-          }
-        ]
-      }
-    },
-    "volumevol0b8ed9a3f0ec2e81a": {
-      "Type": "AWS::EC2::Volume",
-      "Properties": {
-        "AvailabilityZone": "us-east-1a",
-        "Size": "15",
-        "SnapshotId": "snap-062110368015965de",
-        "VolumeType": "gp2",
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "iamdevops-DB-/mnt"
-          }
-        ]
-      }
-    },
-    "volumevol070db16fe9310d76a": {
-      "Type": "AWS::EC2::Volume",
-      "Properties": {
-        "AvailabilityZone": "us-east-1a",
-        "Size": "15",
-        "SnapshotId": "snap-062110368015965de",
-        "VolumeType": "gp2",
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "iamdevops-FE-/mnt"
-          }
-        ]
-      }
-    },
-    "iamdevopsBeRootVol": {
-      "Type": "AWS::EC2::Volume",
-      "Properties": {
-        "AvailabilityZone": "us-east-1a",
-        "Size": "15",
-        "SnapshotId": "snap-007d9b820f8427ea8",
-        "VolumeType": "gp2",
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "iamdevops-BE-root"
-          }
-        ]
-      }
-    },
-    "iamdevopsDbRootVol": {
-      "Type": "AWS::EC2::Volume",
-      "Properties": {
-        "AvailabilityZone": "us-east-1a",
-        "Size": "15",
-        "SnapshotId": "snap-007d9b820f8427ea8",
-        "VolumeType": "gp2",
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "iamdevops-DB-root"
-          }
-        ]
-      }
-    },
-    "iamdevopsFeRootVol": {
-      "Type": "AWS::EC2::Volume",
-      "Properties": {
-        "AvailabilityZone": "us-east-1a",
-        "Size": "15",
-        "SnapshotId": "snap-007d9b820f8427ea8",
-        "VolumeType": "gp2",
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "iamdevops-FE-root"
           }
         ]
       }
