@@ -30,8 +30,8 @@ DB
 
 
 
-export AWS_ACCESS_KEY_ID='AKIASHKBS22JW2R5AA42'
-export AWS_SECRET_ACCESS_KEY='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'
+export AWS_ACCESS_KEY_ID='...'
+export AWS_SECRET_ACCESS_KEY='...'
 export PYTHONPATH=/usr/local/lib/python2.7/site-packages
 git clone git://github.com/boto/boto.git
 cd boto

@@ -1,2 +1,22 @@
 ---
-# tasks file for test-role-1
+- name: create a cloudformation stack
+  cloudformation:
+    stack_name: "multiTierDevops"
+    state: "present"
+    region: "us-east-1"
+    template: "templates/multiTierApp.json"
+    tags:
+      Stack: "iamdevops"
+  tags:
+  - create
+
+- name: delete a cloudformation stack
+  cloudformation:
+    stack_name: "multiTierDevops"
+    state: "absent"
+    region: "us-east-1"
+    template: "templates/multiTierApp.json"
+    tags:
+      Stack: "iamdevops"
+  tags:
+  - remove
