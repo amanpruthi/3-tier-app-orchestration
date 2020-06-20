@@ -1,0 +1,846 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "vpc0f0d000a11fa00498": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.90.0.0/16",
+        "InstanceTenancy": "default",
+        "EnableDnsSupport": "true",
+        "EnableDnsHostnames": "true",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops"
+          }
+        ]
+      }
+    },
+    "subnet0856952d734041bd8": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": "10.90.0.0/20",
+        "AvailabilityZone": "us-east-1a",
+        "VpcId": {
+          "Ref": "vpc0f0d000a11fa00498"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-private-1a"
+          }
+        ]
+      }
+    },
+    "subnet0b185643167786559": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": "10.90.16.0/20",
+        "AvailabilityZone": "us-east-1a",
+        "VpcId": {
+          "Ref": "vpc0f0d000a11fa00498"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-public-1a"
+          }
+        ]
+      }
+    },
+    "igw03f3d11b09d9248f1": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-IGW"
+          }
+        ]
+      }
+    },
+    "nat03f3d11b09d9248f1": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "eip35171190106",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "subnet0b185643167786559"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-NAT"
+          }
+        ]
+      }
+    },
+    "dopt9b41c2e1": {
+      "Type": "AWS::EC2::DHCPOptions",
+      "Properties": {
+        "DomainName": "ec2.internal",
+        "DomainNameServers": [
+          "AmazonProvidedDNS"
+        ]
+      }
+    },
+    "acl08a95ed04d1b5ee20": {
+      "Type": "AWS::EC2::NetworkAcl",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc0f0d000a11fa00498"
+        }
+      }
+    },
+    "rtb0261dd9396145f617": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc0f0d000a11fa00498"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-publicRouteTable"
+          }
+        ]
+      }
+    },
+    "rtb079fecbb0b9363b87": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc0f0d000a11fa00498"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-privateRouteTable"
+          }
+        ]
+      }
+    },
+    "eip35171190106": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc"
+      }
+    },
+    "eip5016233150": {
+      "Type": "AWS::EC2::EIP",
+      "DependsOn": [
+        "gw1"
+      ],
+      "Properties": {
+        "Domain": "vpc"
+      }
+    },
+    "instancei0940818ca9d69a6e9": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "DisableApiTermination": "false",
+        "InstanceInitiatedShutdownBehavior": "stop",
+        "EbsOptimized": "true",
+        "ImageId": "ami-0affd4508a5d2481b",
+        "InstanceType": "t3a.nano",
+        "KeyName": "iamdevops_jumpbox",
+        "Monitoring": "false",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-jumpbox"
+          }
+        ],
+        "NetworkInterfaces": [
+          {
+            "DeleteOnTermination": "true",
+            "Description": "Primary network interface",
+            "DeviceIndex": 0,
+            "SubnetId": {
+              "Ref": "subnet0b185643167786559"
+            },
+            "PrivateIpAddresses": [
+              {
+                "PrivateIpAddress": "10.90.31.32",
+                "Primary": "true"
+              }
+            ],
+            "GroupSet": [
+              {
+                "Ref": "sgiamdevopsjumpbox"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "instancei08e8faa8a4f1fec0b": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "DisableApiTermination": "false",
+        "InstanceInitiatedShutdownBehavior": "stop",
+        "EbsOptimized": "true",
+        "ImageId": "ami-0a378ea6367b5aa0d",
+        "InstanceType": "t3a.micro",
+        "KeyName": "iamdevops_internal",
+        "Monitoring": "false",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-BE"
+          }
+        ],
+        "Volumes": [
+          {
+            "Device": "/dev/sdb",
+            "VolumeId": {
+              "Ref": "volumevol0e30d132dd80f0eec"
+            }
+          },
+          {
+            "Device": "/dev/sda1",
+            "VolumeId": {
+              "Ref": "iamdevopsBeRootVol"
+            }
+          }
+        ],
+        "NetworkInterfaces": [
+          {
+            "DeleteOnTermination": "true",
+            "Description": "Primary network interface",
+            "DeviceIndex": 0,
+            "SubnetId": {
+              "Ref": "subnet0856952d734041bd8"
+            },
+            "PrivateIpAddresses": [
+              {
+                "PrivateIpAddress": "10.90.12.24",
+                "Primary": "true"
+              }
+            ],
+            "GroupSet": [
+              {
+                "Ref": "sgiamdevopsBE"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "instancei0c551f849e2d7207b": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "DisableApiTermination": "false",
+        "InstanceInitiatedShutdownBehavior": "stop",
+        "EbsOptimized": "true",
+        "ImageId": "ami-0a378ea6367b5aa0d",
+        "InstanceType": "t3a.micro",
+        "KeyName": "iamdevops_internal",
+        "Monitoring": "false",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-DB"
+          }
+        ],
+        "Volumes": [
+          {
+            "Device": "/dev/sdb",
+            "VolumeId": {
+              "Ref": "volumevol0b8ed9a3f0ec2e81a"
+            }
+          },
+          {
+            "Device": "/dev/sda1",
+            "VolumeId": {
+              "Ref": "iamdevopsDbRootVol"
+            }
+          }
+        ],
+        "NetworkInterfaces": [
+          {
+            "DeleteOnTermination": "true",
+            "Description": "Primary network interface",
+            "DeviceIndex": 0,
+            "SubnetId": {
+              "Ref": "subnet0856952d734041bd8"
+            },
+            "PrivateIpAddresses": [
+              {
+                "PrivateIpAddress": "10.90.8.174",
+                "Primary": "true"
+              }
+            ],
+            "GroupSet": [
+              {
+                "Ref": "sgiamdevopsBE"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "instancei090bedbd1d30576a5": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "DisableApiTermination": "false",
+        "InstanceInitiatedShutdownBehavior": "stop",
+        "EbsOptimized": "true",
+        "ImageId": "ami-0a378ea6367b5aa0d",
+        "InstanceType": "t3a.micro",
+        "KeyName": "iamdevops_internal",
+        "Monitoring": "false",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-FE"
+          }
+        ],
+        "Volumes": [
+          {
+            "Device": "/dev/sdb",
+            "VolumeId": {
+              "Ref": "volumevol070db16fe9310d76a"
+            }
+          },
+          {
+            "Device": "/dev/sda1",
+            "VolumeId": {
+              "Ref": "iamdevopsFeRootVol"
+            }
+          }
+        ],
+        "NetworkInterfaces": [
+          {
+            "DeleteOnTermination": "true",
+            "Description": "Primary network interface",
+            "DeviceIndex": 0,
+            "SubnetId": {
+              "Ref": "subnet0b185643167786559"
+            },
+            "PrivateIpAddresses": [
+              {
+                "PrivateIpAddress": "10.90.26.34",
+                "Primary": "true"
+              }
+            ],
+            "GroupSet": [
+              {
+                "Ref": "sgiamdevopsFE"
+              }
+            ],
+            "AssociatePublicIpAddress": "true"
+          }
+        ]
+      }
+    },
+    "volumevol0e30d132dd80f0eec": {
+      "Type": "AWS::EC2::Volume",
+      "Properties": {
+        "AvailabilityZone": "us-east-1a",
+        "Size": "15",
+        "SnapshotId": "snap-062110368015965de",
+        "VolumeType": "gp2",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-BE-/mnt"
+          }
+        ]
+      }
+    },
+    "volumevol0b8ed9a3f0ec2e81a": {
+      "Type": "AWS::EC2::Volume",
+      "Properties": {
+        "AvailabilityZone": "us-east-1a",
+        "Size": "15",
+        "SnapshotId": "snap-062110368015965de",
+        "VolumeType": "gp2",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-DB-/mnt"
+          }
+        ]
+      }
+    },
+    "volumevol070db16fe9310d76a": {
+      "Type": "AWS::EC2::Volume",
+      "Properties": {
+        "AvailabilityZone": "us-east-1a",
+        "Size": "15",
+        "SnapshotId": "snap-062110368015965de",
+        "VolumeType": "gp2",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-FE-/mnt"
+          }
+        ]
+      }
+    },
+    "iamdevopsBeRootVol": {
+      "Type": "AWS::EC2::Volume",
+      "Properties": {
+        "AvailabilityZone": "us-east-1a",
+        "Size": "15",
+        "SnapshotId": "snap-007d9b820f8427ea8",
+        "VolumeType": "gp2",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-BE-root"
+          }
+        ]
+      }
+    },
+    "iamdevopsDbRootVol": {
+      "Type": "AWS::EC2::Volume",
+      "Properties": {
+        "AvailabilityZone": "us-east-1a",
+        "Size": "15",
+        "SnapshotId": "snap-007d9b820f8427ea8",
+        "VolumeType": "gp2",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-DB-root"
+          }
+        ]
+      }
+    },
+    "iamdevopsFeRootVol": {
+      "Type": "AWS::EC2::Volume",
+      "Properties": {
+        "AvailabilityZone": "us-east-1a",
+        "Size": "15",
+        "SnapshotId": "snap-007d9b820f8427ea8",
+        "VolumeType": "gp2",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-FE-root"
+          }
+        ]
+      }
+    },
+    "sgiamdevopsFE": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "iamdevops-FE",
+        "VpcId": {
+          "Ref": "vpc0f0d000a11fa00498"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-FE"
+          }
+        ]
+      }
+    },
+    "sgiamdevopsDB": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "iamdevops-DB",
+        "VpcId": {
+          "Ref": "vpc0f0d000a11fa00498"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-DB"
+          }
+        ]
+      }
+    },
+    "sgdefault": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "default VPC security group",
+        "VpcId": {
+          "Ref": "vpc0f0d000a11fa00498"
+        }
+      }
+    },
+    "sgiamdevopsBE": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "iamdevops-BE",
+        "VpcId": {
+          "Ref": "vpc0f0d000a11fa00498"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-BE"
+          }
+        ]
+      }
+    },
+    "sgiamdevopsELB": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "iamdevops-ELB",
+        "VpcId": {
+          "Ref": "vpc0f0d000a11fa00498"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-ELB"
+          }
+        ]
+      }
+    },
+    "sgiamdevopsjumpbox": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "iamdevops-jumpbox",
+        "VpcId": {
+          "Ref": "vpc0f0d000a11fa00498"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "iamdevops-jumpbox"
+          }
+        ]
+      }
+    },
+    "acl1": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "CidrBlock": "0.0.0.0/0",
+        "Egress": "true",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "RuleNumber": "100",
+        "NetworkAclId": {
+          "Ref": "acl08a95ed04d1b5ee20"
+        }
+      }
+    },
+    "acl2": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "CidrBlock": "0.0.0.0/0",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "RuleNumber": "100",
+        "NetworkAclId": {
+          "Ref": "acl08a95ed04d1b5ee20"
+        }
+      }
+    },
+    "subnetacl1": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "acl08a95ed04d1b5ee20"
+        },
+        "SubnetId": {
+          "Ref": "subnet0856952d734041bd8"
+        }
+      }
+    },
+    "subnetacl2": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "acl08a95ed04d1b5ee20"
+        },
+        "SubnetId": {
+          "Ref": "subnet0b185643167786559"
+        }
+      }
+    },
+    "gw1": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc0f0d000a11fa00498"
+        },
+        "InternetGatewayId": {
+          "Ref": "igw03f3d11b09d9248f1"
+        }
+      }
+    },
+    "subnetroute1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb0261dd9396145f617"
+        },
+        "SubnetId": {
+          "Ref": "subnet0b185643167786559"
+        }
+      }
+    },
+    "subnetroute2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb079fecbb0b9363b87"
+        },
+        "SubnetId": {
+          "Ref": "subnet0856952d734041bd8"
+        }
+      }
+    },
+    "route1": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "RouteTableId": {
+          "Ref": "rtb0261dd9396145f617"
+        },
+        "GatewayId": {
+          "Ref": "igw03f3d11b09d9248f1"
+        }
+      },
+      "DependsOn": "gw1"
+    },
+    "route2": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "RouteTableId": {
+          "Ref": "rtb079fecbb0b9363b87"
+        },
+        "NatGatewayId": {
+          "Ref": "nat03f3d11b09d9248f1"
+        }
+      }
+    },
+    "dchpassoc1": {
+      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc0f0d000a11fa00498"
+        },
+        "DhcpOptionsId": {
+          "Ref": "dopt9b41c2e1"
+        }
+      }
+    },
+    "assoc1": {
+      "Type": "AWS::EC2::EIPAssociation",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "eip5016233150",
+            "AllocationId"
+          ]
+        },
+        "InstanceId": {
+          "Ref": "instancei0940818ca9d69a6e9"
+        }
+      }
+    },
+    "ingress1": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgiamdevopsFE"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "22",
+        "ToPort": "22",
+        "SourceSecurityGroupId": {
+          "Ref": "sgiamdevopsjumpbox"
+        },
+        "SourceSecurityGroupOwnerId": "153145759379"
+      }
+    },
+    "ingress2": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgiamdevopsFE"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "8097",
+        "ToPort": "8097",
+        "SourceSecurityGroupId": {
+          "Ref": "sgiamdevopsELB"
+        },
+        "SourceSecurityGroupOwnerId": "153145759379"
+      }
+    },
+    "ingress3": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgiamdevopsDB"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "22",
+        "ToPort": "22",
+        "SourceSecurityGroupId": {
+          "Ref": "sgiamdevopsjumpbox"
+        },
+        "SourceSecurityGroupOwnerId": "153145759379"
+      }
+    },
+    "ingress4": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgiamdevopsDB"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "3306",
+        "ToPort": "3306",
+        "SourceSecurityGroupId": {
+          "Ref": "sgiamdevopsBE"
+        },
+        "SourceSecurityGroupOwnerId": "153145759379"
+      }
+    },
+    "ingress5": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgdefault"
+        },
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "sgdefault"
+        },
+        "SourceSecurityGroupOwnerId": "153145759379"
+      }
+    },
+    "ingress6": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgiamdevopsBE"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "22",
+        "ToPort": "22",
+        "SourceSecurityGroupId": {
+          "Ref": "sgiamdevopsjumpbox"
+        },
+        "SourceSecurityGroupOwnerId": "153145759379"
+      }
+    },
+    "ingress7": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgiamdevopsBE"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "8098",
+        "ToPort": "8098",
+        "SourceSecurityGroupId": {
+          "Ref": "sgiamdevopsFE"
+        },
+        "SourceSecurityGroupOwnerId": "153145759379"
+      }
+    },
+    "ingress8": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgiamdevopsELB"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "80",
+        "ToPort": "80",
+        "CidrIp": "0.0.0.0/0"
+      }
+    },
+    "ingress9": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgiamdevopsELB"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "443",
+        "ToPort": "443",
+        "CidrIp": "0.0.0.0/0"
+      }
+    },
+    "ingress10": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgiamdevopsjumpbox"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "22",
+        "ToPort": "22",
+        "CidrIp": "0.0.0.0/0"
+      }
+    },
+    "egress1": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgiamdevopsFE"
+        },
+        "IpProtocol": "-1",
+        "CidrIp": "0.0.0.0/0"
+      }
+    },
+    "egress2": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgiamdevopsDB"
+        },
+        "IpProtocol": "-1",
+        "CidrIp": "0.0.0.0/0"
+      }
+    },
+    "egress3": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgdefault"
+        },
+        "IpProtocol": "-1",
+        "CidrIp": "0.0.0.0/0"
+      }
+    },
+    "egress4": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgiamdevopsBE"
+        },
+        "IpProtocol": "-1",
+        "CidrIp": "0.0.0.0/0"
+      }
+    },
+    "egress5": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgiamdevopsELB"
+        },
+        "IpProtocol": "-1",
+        "CidrIp": "0.0.0.0/0"
+      }
+    },
+    "egress6": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgiamdevopsjumpbox"
+        },
+        "IpProtocol": "-1",
+        "CidrIp": "0.0.0.0/0"
+      }
+    }
+  },
+  "Description": "multi-tier-app"
+}
