@@ -18,9 +18,6 @@ def executeInShell(command, envVars){
 	println "\n\n**##****##****##****##****##****##****##****##****##****##****##****##****##****##****##**"
 	println "executeInShell::command => ${command}"
 
-	if(dryRun){
-		return null;
-	}
 
 	lib_dir = envVars.WORKSPACE;
 	if(envVars.WORKSPACE_LIB != null){
