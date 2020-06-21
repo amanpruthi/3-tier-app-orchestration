@@ -11,9 +11,9 @@
 
 
   tasks:
-  - include_role:
-      name: DB
-    when: inventory_hostname in groups['tag_App_DB']
+#  - include_role:
+#      name: DB
+#    when: inventory_hostname in groups['tag_App_DB']
 
   - name: Setup BE
     include_role:

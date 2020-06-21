@@ -62,7 +62,7 @@ http {
         limit_req zone={{application}}_reqs_1 burst={{nginx.rate_limit.burst_size}} delay={{nginx.rate_limit.delay}};
         limit_req_status 429;
         limit_conn_status 429;
-        location /users {
+        location /customers {
             proxy_pass http://backend;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
