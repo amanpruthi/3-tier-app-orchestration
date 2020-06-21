@@ -1,0 +1,17 @@
+---
+application: "FE"
+nginx:
+  worker_processes: 2
+  listen_port: 8097
+  logs_dir: "{{ logs_dir }}/nginx"
+  pid_dir: "{{pid_dir}}"
+  rate_limit:
+    zone_size: 30m
+    rate: "20r/s"
+    burst_size: 20
+    delay: 10
+    limit_key: "$remote_addr"
+  realip_from:
+  - 10.90.0.0/20
+  - 10.90.16.0/20
+

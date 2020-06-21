@@ -1,0 +1,6 @@
+---
+pid_dir: "/mnt/pids"
+logs_dir: "/mnt/logs"
+deploy_home: "/home/deployer"
+deploy_group: "deployer"
+deploy_user: "deployer"

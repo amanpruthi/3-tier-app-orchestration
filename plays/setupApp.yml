@@ -6,6 +6,8 @@
   become: yes
   become_method: sudo
   any_errors_fatal: true
+  vars_files:
+    - ./vars/vault.yml
 
 
   tasks:
