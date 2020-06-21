@@ -616,9 +616,7 @@
         "IpProtocol": "tcp",
         "FromPort": "8097",
         "ToPort": "8097",
-        "SourceSecurityGroupId": {
-          "Ref": "SecurityGroupELB"
-        },
+        "CidrIp": "0.0.0.0/0",
         "SourceSecurityGroupOwnerId": "153145759379"
       }
     },
