@@ -1,1 +1,100 @@
 ---
+- name: Set fact vars
+  set_fact:
+    DB_server: "{{ groups['tag_App_DB'][0]  }}"
+    DB_user: "{{mysql_be_users[0]['name']}}"
+    DB_password: "{{mysql_be_users[0]['password']}}"
+
+- name: Define mysql_packages.
+  set_fact:
+    mysql_packages: "{{ __mysql_packages | list }}"
+  when: mysql_packages is not defined
+
+- name: Ensure MySQL packages are installed.
+  yum:
+    name: "{{ mysql_packages }}"
+    state: present
+    enablerepo: "{{ mysql_enablerepo | default(omit, true) }}"
+  register: rh_mysql_install_packages
+
+
+
+- name: Create  dir structure for app
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    recurse: yes
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_group }}"
+    mode: "{{ item.mode }}"
+  with_items:
+  - {path: "/mnt/apps", mode: "0755"}
+
+- name: copy mysql dump
+  copy:
+    src: "{{role_path}}/files/customers.sql"
+    dest: "/mnt/apps/customers.sql"
+
+- mysql_db:
+    name: users
+    state: import
+    target: /mnt/apps/customers.sql
+    login_host: "{{DB_server}}"
+    login_user: "{{DB_user}}"
+    login_password: "{{DB_password}}"
+
+- name: Create env config files for app
+  file:
+    path: "/mnt/apps/setEnv.sh"
+    state: touch
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_group }}"
+    mode: 0750
+
+- name: Symlink env config files
+  file:
+    src: "/mnt/apps/setEnv.sh"
+    dest: "/etc/profile.d/setEnv.sh"
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_group }}"
+    state: link
+    mode: 0750
+
+
+- name: Add env vars deployer user
+  blockinfile:
+    path: "/mnt/apps/setEnv.sh"
+    marker: "#{mark} {{application}} Ansible managed block"
+    block: |
+      export DB_HOST={{DB_server}}
+      export DB_USER={{DB_user}}
+      export DB_PASSWORD={{DB_password}}
+      # Last line is required to be empty or comment, as its required for sudoers else sudo command will break
+
+
+- name: remove old dir
+  file:
+    path: "/mnt/apps/nodejs-express-mysql/*"
+    state: absent
+
+- name: Download the NodeJS code from the GitRepo
+  become_user: "{{ deploy_user }}"
+  git:
+    repo: 'https://github.com/amanpruthi/nodejs-express-mysql.git'
+    dest: "/mnt/apps/nodejs-express-mysql"
+
+- name: run npm install
+  npm:
+    path: /mnt/apps/nodejs-express-mysql
+  # systemd service files
+
+- name: "Create systemd file for nginx proxy service for {{ application}}"
+  template:
+    src: "BE.service.j2"
+    dest: "/etc/systemd/system/{{ application }}.service"
+
+- name: Start BE service
+  systemd:
+    name: "{{ application }}.service"
+    state: restarted
+    enabled: yes

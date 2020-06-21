@@ -1,0 +1,16 @@
+[Unit]
+Description= nodejs-express-mysql
+After=network.target
+
+[Service]
+Type=simple
+User=deployer
+Restart=always
+RestartSec=1
+ExecStart=/bin/bash -l -c 'cd /mnt/apps/nodejs-express-mysql ; node server.js'
+KillSignal=SIGINT
+
+
+
+[Install]
+WantedBy=multi-user.target
