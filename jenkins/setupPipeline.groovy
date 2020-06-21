@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 node {
-  def commonFunctions = load "${WORKSPACE}@script/jenkins/commonFunctions.groovy"
+  def commonFunctions = load "${WORKSPACE}/jenkins/commonFunctions.groovy"
   stage "CloudformationCreateAppStack"
     commonFunctions.createAppStack(env)
   stage "appSetup"
