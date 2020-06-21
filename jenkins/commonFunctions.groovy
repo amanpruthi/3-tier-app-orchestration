@@ -6,7 +6,7 @@ def createAppStack(envVars){
 }
 def appSetup(envVars){
 
-  String command="ansible-playbook  -i ./inventory/ec2.py --vault-password-file ~/.vaultPassword setupApp.yml"
+  String command=" ansible-playbook  -i ./inventory/creds.sh --vault-password-file ~/.vaultPassword setupApp.yml"
   this.executeInShell(command,envVars)
 }
 def executeInShell(command, envVars){
