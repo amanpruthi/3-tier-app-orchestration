@@ -1,0 +1,13 @@
+---
+
+- name: Cloudformation stack setup
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ./vars/vault.yml
+
+
+  tasks:
+
+  - import_role:
+      name: cloudformation

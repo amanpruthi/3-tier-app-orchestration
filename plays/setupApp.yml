@@ -1,0 +1,24 @@
+---
+
+- name: Setup server
+  hosts: tag_App_DB,tag_App_FE,tag_App_BE
+  remote_user: centos
+  become: yes
+  become_method: sudo
+  any_errors_fatal: true
+
+
+  tasks:
+  - include_role:
+      name: DB
+    when: inventory_hostname in groups['tag_App_DB']
+
+  - name: Setup BE
+    include_role:
+      name: BE
+    when: inventory_hostname in groups['tag_App_BE']
+
+  - name: Setup FE
+    include_role:
+      name: FE
+    when: inventory_hostname in groups['tag_App_FE']

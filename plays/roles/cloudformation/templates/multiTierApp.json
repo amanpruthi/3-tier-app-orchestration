@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Resources": {
-    "vpc0f0d000a11fa00498": {
+    "VPC": {
       "Type": "AWS::EC2::VPC",
       "Properties": {
         "CidrBlock": "10.90.0.0/16",
@@ -16,13 +16,13 @@
         ]
       }
     },
-    "subnet0856952d734041bd8": {
+    "PrivateSubnet1a": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
         "CidrBlock": "10.90.0.0/20",
         "AvailabilityZone": "us-east-1a",
         "VpcId": {
-          "Ref": "vpc0f0d000a11fa00498"
+          "Ref": "VPC"
         },
         "Tags": [
           {
@@ -32,13 +32,13 @@
         ]
       }
     },
-    "subnet0b185643167786559": {
+    "PublicSubnet1a": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
         "CidrBlock": "10.90.16.0/20",
         "AvailabilityZone": "us-east-1a",
         "VpcId": {
-          "Ref": "vpc0f0d000a11fa00498"
+          "Ref": "VPC"
         },
         "Tags": [
           {
@@ -48,7 +48,7 @@
         ]
       }
     },
-    "igw03f3d11b09d9248f1": {
+    "InternetGateway": {
       "Type": "AWS::EC2::InternetGateway",
       "Properties": {
         "Tags": [
@@ -59,17 +59,17 @@
         ]
       }
     },
-    "nat03f3d11b09d9248f1": {
+    "NatGateway": {
       "Type": "AWS::EC2::NatGateway",
       "Properties": {
         "AllocationId": {
           "Fn::GetAtt": [
-            "eip35171190106",
+            "NatElasticIp",
             "AllocationId"
           ]
         },
         "SubnetId": {
-          "Ref": "subnet0b185643167786559"
+          "Ref": "PublicSubnet1a"
         },
         "Tags": [
           {
@@ -79,7 +79,7 @@
         ]
       }
     },
-    "dopt9b41c2e1": {
+    "DhcpOptions": {
       "Type": "AWS::EC2::DHCPOptions",
       "Properties": {
         "DomainName": "ec2.internal",
@@ -88,19 +88,19 @@
         ]
       }
     },
-    "acl08a95ed04d1b5ee20": {
+    "NetworkAcl": {
       "Type": "AWS::EC2::NetworkAcl",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc0f0d000a11fa00498"
+          "Ref": "VPC"
         }
       }
     },
-    "rtb0261dd9396145f617": {
+    "PublicRouteTable": {
       "Type": "AWS::EC2::RouteTable",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc0f0d000a11fa00498"
+          "Ref": "VPC"
         },
         "Tags": [
           {
@@ -110,11 +110,11 @@
         ]
       }
     },
-    "rtb079fecbb0b9363b87": {
+    "PrivateRouteTable": {
       "Type": "AWS::EC2::RouteTable",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc0f0d000a11fa00498"
+          "Ref": "VPC"
         },
         "Tags": [
           {
@@ -124,28 +124,19 @@
         ]
       }
     },
-    "eip35171190106": {
+    "NatElasticIp": {
       "Type": "AWS::EC2::EIP",
       "Properties": {
         "Domain": "vpc"
       }
     },
-    "eip5016233150": {
-      "Type": "AWS::EC2::EIP",
-      "DependsOn": [
-        "gw1"
-      ],
-      "Properties": {
-        "Domain": "vpc"
-      }
-    },
-    "instancei0940818ca9d69a6e9": {
+    "JumpboxEc2Machine": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "DisableApiTermination": "false",
         "InstanceInitiatedShutdownBehavior": "stop",
         "EbsOptimized": "true",
-        "ImageId": "ami-0affd4508a5d2481b",
+        "ImageId": "ami-0e0eb3680d8c31853",
         "InstanceType": "t3a.nano",
         "KeyName": "iamdevops_jumpbox",
         "Monitoring": "false",
@@ -161,7 +152,7 @@
             "Description": "Primary network interface",
             "DeviceIndex": 0,
             "SubnetId": {
-              "Ref": "subnet0b185643167786559"
+              "Ref": "PublicSubnet1a"
             },
             "PrivateIpAddresses": [
               {
@@ -171,23 +162,45 @@
             ],
             "GroupSet": [
               {
-                "Ref": "sgiamdevopsjumpbox"
+                "Ref": "SecurityGroupJumpbox"
               }
             ]
           }
         ]
       }
     },
-    "instancei08e8faa8a4f1fec0b": {
+    "BackendEc2Machine": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "DisableApiTermination": "false",
         "InstanceInitiatedShutdownBehavior": "stop",
         "EbsOptimized": "true",
-        "ImageId": "ami-0a378ea6367b5aa0d",
+        "ImageId": "ami-0e0eb3680d8c31853",
         "InstanceType": "t3a.micro",
         "KeyName": "iamdevops_internal",
         "Monitoring": "false",
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "sleep 300 \n",
+                "/opt/aws/bin/cfn-signal -e $? ",
+                "         --stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "         --resource BackendEc2Machine ",
+                "         --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n"
+              ]
+            ]
+          }
+        },
         "Tags": [
           {
             "Key": "Name",
@@ -204,7 +217,7 @@
             "Description": "Primary network interface",
             "DeviceIndex": 0,
             "SubnetId": {
-              "Ref": "subnet0856952d734041bd8"
+              "Ref": "PrivateSubnet1a"
             },
             "PrivateIpAddresses": [
               {
@@ -214,23 +227,51 @@
             ],
             "GroupSet": [
               {
-                "Ref": "sgiamdevopsBE"
+                "Ref": "SecurityGroupBE"
               }
             ]
           }
         ]
+      },
+      "CreationPolicy": {
+        "ResourceSignal": {
+          "Count": 1,
+          "Timeout": "PT15M"
+        }
       }
     },
-    "instancei0c551f849e2d7207b": {
+    "BackendDbMachine": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "DisableApiTermination": "false",
         "InstanceInitiatedShutdownBehavior": "stop",
         "EbsOptimized": "true",
-        "ImageId": "ami-0a378ea6367b5aa0d",
+        "ImageId": "ami-0e0eb3680d8c31853",
         "InstanceType": "t3a.micro",
         "KeyName": "iamdevops_internal",
         "Monitoring": "false",
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "sleep 300 \n",
+                "/opt/aws/bin/cfn-signal -e $? ",
+                "         --stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "         --resource BackendDbMachine ",
+                "         --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n"
+              ]
+            ]
+          }
+        },
         "Tags": [
           {
             "Key": "Name",
@@ -247,7 +288,7 @@
             "Description": "Primary network interface",
             "DeviceIndex": 0,
             "SubnetId": {
-              "Ref": "subnet0856952d734041bd8"
+              "Ref": "PrivateSubnet1a"
             },
             "PrivateIpAddresses": [
               {
@@ -257,23 +298,51 @@
             ],
             "GroupSet": [
               {
-                "Ref": "sgiamdevopsDB"
+                "Ref": "SecurityGroupDB"
               }
             ]
           }
         ]
+      },
+      "CreationPolicy": {
+        "ResourceSignal": {
+          "Count": 1,
+          "Timeout": "PT15M"
+        }
       }
     },
-    "instancei090bedbd1d30576a5": {
+    "FrontendMachine": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
         "DisableApiTermination": "false",
         "InstanceInitiatedShutdownBehavior": "stop",
         "EbsOptimized": "true",
-        "ImageId": "ami-0a378ea6367b5aa0d",
+        "ImageId": "ami-0e0eb3680d8c31853",
         "InstanceType": "t3a.micro",
         "KeyName": "iamdevops_internal",
         "Monitoring": "false",
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "sleep 300 \n",
+                "/opt/aws/bin/cfn-signal -e $? ",
+                "         --stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "         --resource FrontendMachine ",
+                "         --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n"
+              ]
+            ]
+          }
+        },
         "Tags": [
           {
             "Key": "Name",
@@ -290,7 +359,7 @@
             "Description": "Primary network interface",
             "DeviceIndex": 0,
             "SubnetId": {
-              "Ref": "subnet0b185643167786559"
+              "Ref": "PublicSubnet1a"
             },
             "PrivateIpAddresses": [
               {
@@ -300,20 +369,26 @@
             ],
             "GroupSet": [
               {
-                "Ref": "sgiamdevopsFE"
+                "Ref": "SecurityGroupFE"
               }
             ],
             "AssociatePublicIpAddress": "true"
           }
         ]
+      },
+      "CreationPolicy": {
+        "ResourceSignal": {
+          "Count": 1,
+          "Timeout": "PT15M"
+        }
       }
     },
-    "sgiamdevopsFE": {
+    "SecurityGroupFE": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "iamdevops-FE",
         "VpcId": {
-          "Ref": "vpc0f0d000a11fa00498"
+          "Ref": "VPC"
         },
         "Tags": [
           {
@@ -323,12 +398,12 @@
         ]
       }
     },
-    "sgiamdevopsDB": {
+    "SecurityGroupDB": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "iamdevops-DB",
         "VpcId": {
-          "Ref": "vpc0f0d000a11fa00498"
+          "Ref": "VPC"
         },
         "Tags": [
           {
@@ -338,21 +413,21 @@
         ]
       }
     },
-    "sgdefault": {
+    "SecurityGroupDefault": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "default VPC security group",
         "VpcId": {
-          "Ref": "vpc0f0d000a11fa00498"
+          "Ref": "VPC"
         }
       }
     },
-    "sgiamdevopsBE": {
+    "SecurityGroupBE": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "iamdevops-BE",
         "VpcId": {
-          "Ref": "vpc0f0d000a11fa00498"
+          "Ref": "VPC"
         },
         "Tags": [
           {
@@ -362,12 +437,12 @@
         ]
       }
     },
-    "sgiamdevopsELB": {
+    "SecurityGroupELB": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "iamdevops-ELB",
         "VpcId": {
-          "Ref": "vpc0f0d000a11fa00498"
+          "Ref": "VPC"
         },
         "Tags": [
           {
@@ -377,12 +452,12 @@
         ]
       }
     },
-    "sgiamdevopsjumpbox": {
+    "SecurityGroupJumpbox": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "iamdevops-jumpbox",
         "VpcId": {
-          "Ref": "vpc0f0d000a11fa00498"
+          "Ref": "VPC"
         },
         "Tags": [
           {
@@ -392,7 +467,7 @@
         ]
       }
     },
-    "acl1": {
+    "NetworkAclEntry1": {
       "Type": "AWS::EC2::NetworkAclEntry",
       "Properties": {
         "CidrBlock": "0.0.0.0/0",
@@ -401,11 +476,11 @@
         "RuleAction": "allow",
         "RuleNumber": "100",
         "NetworkAclId": {
-          "Ref": "acl08a95ed04d1b5ee20"
+          "Ref": "NetworkAcl"
         }
       }
     },
-    "acl2": {
+    "NetworkAclEntry2": {
       "Type": "AWS::EC2::NetworkAclEntry",
       "Properties": {
         "CidrBlock": "0.0.0.0/0",
@@ -413,223 +488,218 @@
         "RuleAction": "allow",
         "RuleNumber": "100",
         "NetworkAclId": {
-          "Ref": "acl08a95ed04d1b5ee20"
+          "Ref": "NetworkAcl"
         }
       }
     },
-    "subnetacl1": {
+    "SubnetAclAssociation1": {
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties": {
         "NetworkAclId": {
-          "Ref": "acl08a95ed04d1b5ee20"
+          "Ref": "NetworkAcl"
         },
         "SubnetId": {
-          "Ref": "subnet0856952d734041bd8"
+          "Ref": "PrivateSubnet1a"
         }
       }
     },
-    "subnetacl2": {
+    "SubnetAclAssociation2": {
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties": {
         "NetworkAclId": {
-          "Ref": "acl08a95ed04d1b5ee20"
+          "Ref": "NetworkAcl"
         },
         "SubnetId": {
-          "Ref": "subnet0b185643167786559"
+          "Ref": "PublicSubnet1a"
         }
       }
     },
-    "gw1": {
+    "InternetGatewayAttachment": {
       "Type": "AWS::EC2::VPCGatewayAttachment",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc0f0d000a11fa00498"
+          "Ref": "VPC"
         },
         "InternetGatewayId": {
-          "Ref": "igw03f3d11b09d9248f1"
+          "Ref": "InternetGateway"
         }
       }
     },
-    "subnetroute1": {
+    "SubnetPublicRoute1": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "RouteTableId": {
-          "Ref": "rtb0261dd9396145f617"
+          "Ref": "PublicRouteTable"
         },
         "SubnetId": {
-          "Ref": "subnet0b185643167786559"
+          "Ref": "PublicSubnet1a"
         }
       }
     },
-    "subnetroute2": {
+    "SubnetPrivateRoute1": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "RouteTableId": {
-          "Ref": "rtb079fecbb0b9363b87"
+          "Ref": "PrivateRouteTable"
         },
         "SubnetId": {
-          "Ref": "subnet0856952d734041bd8"
+          "Ref": "PrivateSubnet1a"
         }
       }
     },
-    "route1": {
+    "PublicRoute1": {
       "Type": "AWS::EC2::Route",
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
         "RouteTableId": {
-          "Ref": "rtb0261dd9396145f617"
+          "Ref": "PublicRouteTable"
         },
         "GatewayId": {
-          "Ref": "igw03f3d11b09d9248f1"
+          "Ref": "InternetGateway"
         }
       },
-      "DependsOn": "gw1"
+      "DependsOn": "InternetGatewayAttachment"
     },
-    "route2": {
+    "PrivateRoute1": {
       "Type": "AWS::EC2::Route",
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
         "RouteTableId": {
-          "Ref": "rtb079fecbb0b9363b87"
+          "Ref": "PrivateRouteTable"
         },
         "NatGatewayId": {
-          "Ref": "nat03f3d11b09d9248f1"
+          "Ref": "NatGateway"
         }
       }
     },
-    "dchpassoc1": {
+    "VpcDhcpAssociation": {
       "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
       "Properties": {
         "VpcId": {
-          "Ref": "vpc0f0d000a11fa00498"
+          "Ref": "VPC"
         },
         "DhcpOptionsId": {
-          "Ref": "dopt9b41c2e1"
+          "Ref": "DhcpOptions"
         }
       }
     },
-    "assoc1": {
+    "JumpboxEipAssociation": {
       "Type": "AWS::EC2::EIPAssociation",
       "Properties": {
-        "AllocationId": {
-          "Fn::GetAtt": [
-            "eip5016233150",
-            "AllocationId"
-          ]
-        },
+        "AllocationId": "eipalloc-03d83891ad6eb599c",
         "InstanceId": {
-          "Ref": "instancei0940818ca9d69a6e9"
+          "Ref": "JumpboxEc2Machine"
         }
       }
     },
-    "ingress1": {
+    "SecurityGroupFEIn1": {
       "Type": "AWS::EC2::SecurityGroupIngress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgiamdevopsFE"
+          "Ref": "SecurityGroupFE"
         },
         "IpProtocol": "tcp",
         "FromPort": "22",
         "ToPort": "22",
         "SourceSecurityGroupId": {
-          "Ref": "sgiamdevopsjumpbox"
+          "Ref": "SecurityGroupJumpbox"
         },
         "SourceSecurityGroupOwnerId": "153145759379"
       }
     },
-    "ingress2": {
+    "SecurityGroupFEIn2": {
       "Type": "AWS::EC2::SecurityGroupIngress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgiamdevopsFE"
+          "Ref": "SecurityGroupFE"
         },
         "IpProtocol": "tcp",
         "FromPort": "8097",
         "ToPort": "8097",
         "SourceSecurityGroupId": {
-          "Ref": "sgiamdevopsELB"
+          "Ref": "SecurityGroupELB"
         },
         "SourceSecurityGroupOwnerId": "153145759379"
       }
     },
-    "ingress3": {
+    "SecurityGroupDBIn1": {
       "Type": "AWS::EC2::SecurityGroupIngress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgiamdevopsDB"
+          "Ref": "SecurityGroupDB"
         },
         "IpProtocol": "tcp",
         "FromPort": "22",
         "ToPort": "22",
         "SourceSecurityGroupId": {
-          "Ref": "sgiamdevopsjumpbox"
+          "Ref": "SecurityGroupJumpbox"
         },
         "SourceSecurityGroupOwnerId": "153145759379"
       }
     },
-    "ingress4": {
+    "SecurityGroupDBIn2": {
       "Type": "AWS::EC2::SecurityGroupIngress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgiamdevopsDB"
+          "Ref": "SecurityGroupDB"
         },
         "IpProtocol": "tcp",
         "FromPort": "3306",
         "ToPort": "3306",
         "SourceSecurityGroupId": {
-          "Ref": "sgiamdevopsBE"
+          "Ref": "SecurityGroupBE"
         },
         "SourceSecurityGroupOwnerId": "153145759379"
       }
     },
-    "ingress5": {
+    "SecurityGroupDefaultIn1": {
       "Type": "AWS::EC2::SecurityGroupIngress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgdefault"
+          "Ref": "SecurityGroupDefault"
         },
         "IpProtocol": "-1",
         "SourceSecurityGroupId": {
-          "Ref": "sgdefault"
+          "Ref": "SecurityGroupDefault"
         },
         "SourceSecurityGroupOwnerId": "153145759379"
       }
     },
-    "ingress6": {
+    "SecurityGroupBEIn1": {
       "Type": "AWS::EC2::SecurityGroupIngress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgiamdevopsBE"
+          "Ref": "SecurityGroupBE"
         },
         "IpProtocol": "tcp",
         "FromPort": "22",
         "ToPort": "22",
         "SourceSecurityGroupId": {
-          "Ref": "sgiamdevopsjumpbox"
+          "Ref": "SecurityGroupJumpbox"
         },
         "SourceSecurityGroupOwnerId": "153145759379"
       }
     },
-    "ingress7": {
+    "SecurityGroupBEIn2": {
       "Type": "AWS::EC2::SecurityGroupIngress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgiamdevopsBE"
+          "Ref": "SecurityGroupBE"
         },
         "IpProtocol": "tcp",
         "FromPort": "8098",
         "ToPort": "8098",
         "SourceSecurityGroupId": {
-          "Ref": "sgiamdevopsFE"
+          "Ref": "SecurityGroupFE"
         },
         "SourceSecurityGroupOwnerId": "153145759379"
       }
     },
-    "ingress8": {
+    "SecurityGroupELBIn1": {
       "Type": "AWS::EC2::SecurityGroupIngress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgiamdevopsELB"
+          "Ref": "SecurityGroupELB"
         },
         "IpProtocol": "tcp",
         "FromPort": "80",
@@ -637,11 +707,11 @@
         "CidrIp": "0.0.0.0/0"
       }
     },
-    "ingress9": {
+    "SecurityGroupELBIn2": {
       "Type": "AWS::EC2::SecurityGroupIngress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgiamdevopsELB"
+          "Ref": "SecurityGroupELB"
         },
         "IpProtocol": "tcp",
         "FromPort": "443",
@@ -649,11 +719,11 @@
         "CidrIp": "0.0.0.0/0"
       }
     },
-    "ingress10": {
+    "SecurityGroupJumpboxIn1": {
       "Type": "AWS::EC2::SecurityGroupIngress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgiamdevopsjumpbox"
+          "Ref": "SecurityGroupJumpbox"
         },
         "IpProtocol": "tcp",
         "FromPort": "22",
@@ -661,61 +731,61 @@
         "CidrIp": "0.0.0.0/0"
       }
     },
-    "egress1": {
+    "SecurityGroupFEOut1": {
       "Type": "AWS::EC2::SecurityGroupEgress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgiamdevopsFE"
+          "Ref": "SecurityGroupFE"
         },
         "IpProtocol": "-1",
         "CidrIp": "0.0.0.0/0"
       }
     },
-    "egress2": {
+    "SecurityGroupDBOut1": {
       "Type": "AWS::EC2::SecurityGroupEgress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgiamdevopsDB"
+          "Ref": "SecurityGroupDB"
         },
         "IpProtocol": "-1",
         "CidrIp": "0.0.0.0/0"
       }
     },
-    "egress3": {
+    "SecurityGroupDefaultOut1": {
       "Type": "AWS::EC2::SecurityGroupEgress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgdefault"
+          "Ref": "SecurityGroupDefault"
         },
         "IpProtocol": "-1",
         "CidrIp": "0.0.0.0/0"
       }
     },
-    "egress4": {
+    "SecurityGroupBEOut1": {
       "Type": "AWS::EC2::SecurityGroupEgress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgiamdevopsBE"
+          "Ref": "SecurityGroupBE"
         },
         "IpProtocol": "-1",
         "CidrIp": "0.0.0.0/0"
       }
     },
-    "egress5": {
+    "SecurityGroupELBOut1": {
       "Type": "AWS::EC2::SecurityGroupEgress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgiamdevopsELB"
+          "Ref": "SecurityGroupELB"
         },
         "IpProtocol": "-1",
         "CidrIp": "0.0.0.0/0"
       }
     },
-    "egress6": {
+    "SecurityGroupJumpboxOut1": {
       "Type": "AWS::EC2::SecurityGroupEgress",
       "Properties": {
         "GroupId": {
-          "Ref": "sgiamdevopsjumpbox"
+          "Ref": "SecurityGroupJumpbox"
         },
         "IpProtocol": "-1",
         "CidrIp": "0.0.0.0/0"

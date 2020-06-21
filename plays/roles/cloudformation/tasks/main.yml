@@ -3,8 +3,11 @@
   cloudformation:
     stack_name: "multiTierDevops"
     state: "present"
+    aws_access_key: "{{aws_access_key}}"
+    aws_secret_key: "{{aws_secret_key}}"
     region: "us-east-1"
-    template: "templates/multiTierApp.json"
+    disable_rollback: true
+    template: "{{role_path}}/templates/multiTierApp.json"
     tags:
       Stack: "iamdevops"
   tags:
@@ -14,8 +17,10 @@
   cloudformation:
     stack_name: "multiTierDevops"
     state: "absent"
+    aws_access_key: "{{aws_access_key}}"
+    aws_secret_key: "{{aws_secret_key}}"
     region: "us-east-1"
-    template: "templates/multiTierApp.json"
+    template: "{{role_path}}/templates/multiTierApp.json"
     tags:
       Stack: "iamdevops"
   tags:

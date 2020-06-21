@@ -30,13 +30,10 @@ DB
 
 
 
-export AWS_ACCESS_KEY_ID='...'
-export AWS_SECRET_ACCESS_KEY='...'
-export PYTHONPATH=/usr/local/lib/python2.7/site-packages
-git clone git://github.com/boto/boto.git
-cd boto
-sudo python setup.py install
-sudo easy_install pip
-pip install ansible
-pip install boto3 
-ansible -i ./inventory/ec2.py --limit "tag_App_BE" -m ping all
+
+ansible-playbook -i localhost --tags "create"  --vault-password-file ~/.vaultPassword cloudFormationOperations.yml
+
+ansible-playbook  -i ./inventory/ec2.py --vault-password-file ~/.vaultPassword setupApp.yml
+
+
+
