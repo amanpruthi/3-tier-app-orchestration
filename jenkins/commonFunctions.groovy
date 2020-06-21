@@ -1,7 +1,7 @@
 
 def createAppStack(envVars){
 
-  String command="ansible-playbook -i localhost --tags "create"  --vault-password-file ~/.vaultPassword  cloudFormationOperations.yml"
+  String command="ansible-playbook -i localhost --tags 'create'  --vault-password-file ~/.vaultPassword  cloudFormationOperations.yml"
   this.executeInShell(command,envVars)
 }
 def appSetup(envVars){
