@@ -4,4 +4,4 @@ credentials=$(ansible localhost --inventory='localhost,' --vault-password-file ~
 export AWS_ACCESS_KEY_ID=$(echo $credentials | cut -d: -f1)
 export AWS_SECRET_ACCESS_KEY=$(echo $credentials | cut -d: -f2)
 export EC2_INI_PATH="$(dirname $0)/inventory/ec2.ini"
-/usr/bin/python ec2.py
+/usr/bin/python  inventory/ec2.py
