@@ -23,17 +23,12 @@ DB
 * Deploy images on the 3 kubernetes pods using kubernetes .
 
 
-## issues to fix :
-* elastic Ips should be hardcoded for jumpbox 
-* meaningful names 
-
-
-
-
-
+## Commands to run 
+* Please have your aws keys in the ansible vault before running the below command or have them exported on the environment 
 ansible-playbook -i localhost --tags "create"  --vault-password-file ~/.vaultPassword cloudFormationOperations.yml
 
-ansible-playbook  -i ./inventory/ec2.py --vault-password-file ~/.vaultPassword setupApp.yml
+* The below command uses dynamic inventory and then we orchestrate on it based on the EC2_tags
+ansible-playbook  -i ./inventory/creds.sh  --vault-password-file ~/.vaultPassword setupApp.yml
 
 
 
