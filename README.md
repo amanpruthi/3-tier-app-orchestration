@@ -31,4 +31,3 @@ ansible-playbook -i localhost --tags "create"  --vault-password-file ~/.vaultPas
 ansible-playbook  -i ./inventory/creds.sh  --vault-password-file ~/.vaultPassword setupApp.yml
 
 
-
